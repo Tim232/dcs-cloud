@@ -58,7 +58,6 @@ def insert_returns(body):
 class owner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.get("config.json")
         self._last_result = None
         self.normal_color = 0x00fa6c
         self.error_color = 0xff4a4a
