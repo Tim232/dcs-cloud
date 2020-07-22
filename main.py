@@ -44,8 +44,85 @@ async def clear(ctx,limit:int):
   await ctx.send("Clearing...")
   if ctx.message.author.id not in owner: return
   await ctx.channel.purge(limit=limit+2)
+def insert_returns(body):
+    if isinstance(body[-1], ast.Expr):
+        body[-1] = ast.Return(body[-1].value)
+        ast.fix_missing_locations(body[-1])
 
+    if isinstance(body[-1], ast.If):
+        insert_returns(body[-1].body)
+        insert_returns(body[-1].orelse)
 
+    if isinstance(body[-1], ast.With):
+        insert_returns(body[-1].body)
+class owner(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.config = default.get("config.json")
+        self._last_result = None
+        self.normal_color = 0x00fa6c
+        self.error_color = 0xff4a4a
+    @commands.command(name = 'eval')
+    async def eval_fn(self, ctx, *, cmd):
+      if ctx.author.id in [674813875291422720,714486865939660860]:
+        try:
+            fn_name = "_eval_expr"
+            cmd = cmd.strip("` ")
+            cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
+            body = f"async def {fn_name}():\n{cmd}"
+            parsed = ast.parse(body)
+            body = parsed.body[0].body
+            insert_returns(body)
+            env = {
+                'bot': self.bot,
+                'discord': discord,
+                'commands': commands,
+                'ctx': ctx,
+                '__import__': __import__
+                }
+            exec(compile(parsed, filename="<ast>", mode="exec"), env)
+
+            result = (await eval(f"{fn_name}()", env))
+            await ctx.send(result)
+        except Exception as a:
+            await ctx.send(a)
+      else:
+        await ctx.send("어디서 감히 eval을 쓸려고")
+    @commands.command()
+    async def sudo(self,ctx, user : discord.Member,*, command : str):
+      if ctx.author.id in [674813875291422720]:
+        message = ctx.message
+        message.author = user
+        message.content = command
+        await self.bot.process_commands(message)
+    @commands.command(name = 'sudo2')
+    async def sudo2(self, ctx, *, cmd):
+      if ctx.author.id in [674813875291422720,714486865939660860]:
+            cmds = cmd.split(' ')
+            if cmds[0] == 'eval':
+                await self.eval_fn(ctx = ctx, cmd = cmds[1])
+            elif cmds[0] == '리로드':
+                await self.reloadall(ctx = ctx)
+
+    @commands.command()
+    async def shell(self, ctx, *cmd) :
+      if ctx.author.id in [674813875291422720,714486865939660860]:
+          try :
+            cmd = " ".join(cmd[:])
+            res = subprocess.check_output(cmd, shell=True, encoding='utf-8')
+            embed=discord.Embed(title="**Command Sent!**", description=f"Input : **{cmd}**", color=self.normal_color)
+            embed.add_field(name="Output", value=f"```{res}```")
+            await ctx.send(embed=embed)
+          except (discord.errors.HTTPException) :
+            await ctx.send ('글자수가 많아 일반 텍스트로 전송합니다.')
+            cmd = " ".join(cmd[:])
+            res = subprocess.check_output(cmd, shell=True, encoding='utf-8')
+            await ctx.send("```" + res + "```")
+          except (subprocess.CalledProcessError) :
+            embed=discord.Embed(title="**Command Error!**", description="명령어 처리 도중 오류 발생!",color=self.error_color)
+            await ctx.send(embed=embed)
+def setup(bot):
+    bot.add_cog(owner(bot))
 @bot.command()
 async def help(ctx):
   await ctx.send("```목록수정 ----- 제작자만\nupload\n채널수정\n이채널수정\nclose\nuploadmessage ----- 제작자만\ndelete ----- 제작자만\neval ----- 제작자만\nclear ----- 제작자만```")
