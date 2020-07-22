@@ -278,5 +278,5 @@ async def bg_change_playing():
         await bot.get_channel(725117974263889972).edit(name=f"👥 {len(list(filter(lambda x: not x.bot, guild.members)))} Users")
         #await bot.get_channel(722836493638303751).edit(name=f"🤖 {len(list(filter(lambda x: x.bot, guild.members)))} Bots")
         await asyncio.sleep(300)
-      except Exception as e: print(e)
+      except: pass
 bot.run(token)
