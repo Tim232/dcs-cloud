@@ -3,7 +3,7 @@ import asyncio
 import os
 import math
 from discord.ext import commands
-import subprocess
+import subprocess#d
 import os
 import sys
 import ast
