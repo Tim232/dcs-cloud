@@ -121,8 +121,8 @@ class owner(commands.Cog):
           except (subprocess.CalledProcessError) :
             embed=discord.Embed(title="**Command Error!**", description="명령어 처리 도중 오류 발생!",color=self.error_color)
             await ctx.send(embed=embed)
-def setup(bot):
-    bot.add_cog(owner(bot))
+
+bot.add_cog(owner(bot))
 @bot.command()
 async def help(ctx):
   await ctx.send("```목록수정 ----- 제작자만\nupload\n채널수정\n이채널수정\nclose\nuploadmessage ----- 제작자만\ndelete ----- 제작자만\neval ----- 제작자만\nclear ----- 제작자만```")
